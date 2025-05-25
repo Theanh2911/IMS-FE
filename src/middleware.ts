@@ -7,9 +7,6 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   const token = request.cookies.get('token')?.value || ''
-  
-  console.log('Middleware - Path:', path);
-  console.log('Middleware - Token:', token ? 'exists' : 'none');
 
   if (path === '/') {
     const response = NextResponse.redirect(new URL('/login', request.url))
@@ -27,13 +24,11 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = publicPaths.includes(path)
 
   if (!isPublicPath && !token) {
-    console.log('Middleware - Redirecting to login (unauthenticated user on protected path)');
     const response = NextResponse.redirect(new URL('/login', request.url))
     response.cookies.delete('token')
     return response
   }
 
-  console.log('Middleware - Allowing request to proceed');
   return NextResponse.next()
 }
 
