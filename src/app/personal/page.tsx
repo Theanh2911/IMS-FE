@@ -1,6 +1,6 @@
 "use client"
 
-import { PersonalForm } from "@/components/ui/personal-form"
+import { PersonalForm } from ".../components/ui/personal-form"
 
 export default function PersonalPage() {
     return (
