@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -23,17 +24,19 @@ interface LoginResponse {
   role: string
   expirationTime: string
   timestamp: string
+  username: string
+  name: string
 }
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +44,7 @@ export function LoginForm({
     setIsLoading(true)
 
     try {
-      console.log('Attempting login...');
+      console.log('Attempting login...')
       const response = await fetch("http://localhost:8080/api/auth/login", {
         method: "POST",
         headers: {
@@ -51,7 +54,7 @@ export function LoginForm({
       })
 
       const data = await response.json() as LoginResponse
-      console.log('Login response:', data);
+      console.log('Login response:', data)
 
       if (!response.ok) {
         throw new Error(data.message || "Login failed")
@@ -61,26 +64,47 @@ export function LoginForm({
         throw new Error("No token received")
       }
 
+      if (!data.userId) {
+        throw new Error("No user ID received")
+      }
 
-      Cookies.set('token', data.token, {
-        expires: 180, // 6 months
-        path: '/',
-        sameSite: 'strict',
-      })
+      // Store auth data
+      try {
+        localStorage.clear() // Clear any old data
+        
+        Cookies.set('token', data.token, {
+          expires: 180,
+          path: '/',
+          sameSite: 'strict',
+        })
 
-      localStorage.setItem('user', JSON.stringify({
-        username,
-        role: data.role,
-      }))
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('userId', data.userId.toString())
+        localStorage.setItem('user', JSON.stringify({
+          username: data.username,
+          name: data.name,
+          role: data.role,
+        }))
 
-      localStorage.setItem('userId', data.userId.toString())
+        // Verify storage
+        const storedUserId = localStorage.getItem('userId')
+        const storedToken = localStorage.getItem('token')
+        
+        if (!storedUserId || !storedToken) {
+          throw new Error("Failed to store authentication data")
+        }
 
-      toast.success(data.message || "Login successful!")
-
-      window.location.href = '/dashboard'
-
+        toast.success(data.message || "Login successful!")
+        console.log('Redirecting to dashboard...')
+        
+        // Force a hard navigation to dashboard
+        window.location.href = '/dashboard'
+      } catch (storageError) {
+        console.error('Storage error:', storageError)
+        throw new Error("Failed to store login information. Please try again.")
+      }
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('Login error:', err)
       setError(err.message)
       toast.error(err.message || "Login failed")
     } finally {
