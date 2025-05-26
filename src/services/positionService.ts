@@ -47,4 +47,15 @@ export async function moveProduct(moveRequest: MoveProductRequest): Promise<Move
   
   const data: MoveProductApiResponse = await response.json();
   return data;
+}
+
+export async function removeProductFromPosition(productId: number, positionId: number): Promise<void> {
+  const response = await fetch(`http://localhost:8080/api/v1/positions/remove-product/${productId}/${positionId}`, {
+    method: 'DELETE',
+    headers: getAuthHeader(),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to remove product from position');
+  }
 } 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { SiteHeader } from "@/components/dashboard/site-header"
+import { AdminGuard } from "@/components/auth/admin-guard"
 import {
     SidebarInset,
     SidebarProvider,
@@ -100,8 +101,9 @@ export default function StocktakingPage() {
         sessionNotes: ""
     });
 
+
+
     useEffect(() => {
-        // Load cancelled session IDs from localStorage on component mount
         const storedCancelledIds = localStorage.getItem('cancelledSessionIds');
         if (storedCancelledIds) {
             setCancelledSessionIds(JSON.parse(storedCancelledIds));
@@ -148,8 +150,7 @@ export default function StocktakingPage() {
             }
 
             const token = localStorage.getItem('token');
-            
-            // Get the latest cancelled session IDs from localStorage
+
             const storedCancelledIds = localStorage.getItem('cancelledSessionIds');
             const currentCancelledIds = storedCancelledIds ? JSON.parse(storedCancelledIds) : [];
 
@@ -169,7 +170,6 @@ export default function StocktakingPage() {
                     setCurrentSession(data.data);
                 }
             } else {
-                // If no active session from the dedicated endpoint, check getAllSessions for ACTIVE status
                 const allSessionsResponse = await fetch('http://localhost:8080/api/v1/stocktaking/getAllSessions', {
                     method: 'GET',
                     headers: {
@@ -190,7 +190,6 @@ export default function StocktakingPage() {
             }
         } catch (err) {
             console.error('Error fetching active session:', err);
-            // If no active session, that's fine
         }
     };
 
@@ -274,9 +273,8 @@ export default function StocktakingPage() {
                 sessionNotes: sessionForm.sessionNotes
             });
 
-            // Create a local session with current products
             const localSession: StocktakingSession = {
-                id: Date.now(), // Use timestamp as temporary ID
+                id: Date.now(),
                 sessionName: sessionForm.sessionName,
                 sessionNotes: sessionForm.sessionNotes,
                 sessionDate: new Date().toISOString(),
@@ -329,7 +327,6 @@ export default function StocktakingPage() {
             const data = await response.json();
 
             if (data && data.status === 200) {
-                // Refresh current session and sessions list
                 await fetchActiveSession();
                 await fetchAllSessions();
                 setIsEditSessionDialogOpen(false);
@@ -366,7 +363,6 @@ export default function StocktakingPage() {
                 setError(null);
                 console.log('Updated local product count:', productId, countedQuantity);
             } else {
-                // For backend sessions, make API call
                 const token = localStorage.getItem('token');
 
                 const response = await fetch(`http://localhost:8080/api/v1/stocktaking/sessions/${currentSession.id}/products/${productId}`, {
@@ -383,7 +379,6 @@ export default function StocktakingPage() {
                 const data = await response.json();
 
                 if (data && data.status === 200) {
-                    // Update local state immediately for better UX
                     const updatedSession = {
                         ...currentSession,
                         products: currentSession.products.map(product => {
@@ -446,7 +441,6 @@ export default function StocktakingPage() {
                 const backendSession = createData.data;
                 console.log('Session created in backend:', backendSession);
 
-                // Now update all the counted quantities
                 for (const product of currentSession.products) {
                     if (product.countedQuantity !== null) {
                         await fetch(`http://localhost:8080/api/v1/stocktaking/sessions/${backendSession.id}/products/${product.productId}`, {
@@ -462,7 +456,6 @@ export default function StocktakingPage() {
                     }
                 }
 
-                // Finally, complete the session
                 const completeResponse = await fetch(`http://localhost:8080/api/v1/stocktaking/sessions/${backendSession.id}`, {
                     method: 'PUT',
                     headers: {
@@ -487,7 +480,6 @@ export default function StocktakingPage() {
                     throw new Error(completeData.message || "Failed to complete session");
                 }
             } else {
-                // For existing backend sessions, just complete them
                 const response = await fetch(`http://localhost:8080/api/v1/stocktaking/sessions/${currentSession.id}`, {
                     method: 'PUT',
                     headers: {
@@ -543,7 +535,6 @@ export default function StocktakingPage() {
             console.log('Delete response data:', data);
 
             if (data && data.status === 200) {
-                // Refresh sessions list
                 fetchAllSessions();
                 if (currentSession && currentSession.id === sessionId) {
                     setCurrentSession(null);
@@ -554,7 +545,7 @@ export default function StocktakingPage() {
             }
         } catch (err) {
             console.error('Error deleting session:', err);
-            throw err; // Re-throw the error so calling functions can handle it
+            throw err;
         }
     };
 
@@ -688,6 +679,16 @@ export default function StocktakingPage() {
     }
 
     return (
+        <AdminGuard
+            fallback={
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+                        <p className="text-gray-600"></p>
+                    </div>
+                </div>
+            }
+        >
         <SidebarProvider
             style={
                 {
@@ -696,7 +697,6 @@ export default function StocktakingPage() {
                 } as React.CSSProperties
             }
         >
-
             <AppSidebar variant="inset" />
             <SidebarInset>
                 <SiteHeader />
@@ -1148,5 +1148,6 @@ export default function StocktakingPage() {
                 </div>
             </SidebarInset>
         </SidebarProvider>
+        </AdminGuard>
     );
 }
