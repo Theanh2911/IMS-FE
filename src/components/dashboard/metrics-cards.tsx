@@ -68,10 +68,8 @@ export function MetricsCards() {
                     setLoading(false)
                     return
                 }
-
-                console.log('Making API call to:', 'http://localhost:8080/api/v1/dashboard/stats') // Debug log
                 
-                const response = await fetch('http://localhost:8080/api/v1/dashboard/stats', {
+                const response = await fetch('http://192.168.1.11:8080/api/v1/dashboard/stats', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
