@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PositionDetails } from "@/types/position";
-import { getPositionDetails } from "@/services/positionService";
+import { getPositionDetails, removeProductFromPosition } from "@/services/positionService";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { Trash2 } from "lucide-react";
 
 interface PositionDetailsModalProps {
   positionId: number | null;
@@ -32,6 +35,8 @@ export function PositionDetailsModal({ positionId, isOpen, onClose }: PositionDe
   const [details, setDetails] = useState<PositionDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [removingProducts, setRemovingProducts] = useState<Set<number>>(new Set());
+  const { toast } = useToast();
 
   useEffect(() => {
     if (positionId && isOpen) {
@@ -52,13 +57,42 @@ export function PositionDetailsModal({ positionId, isOpen, onClose }: PositionDe
     }
   }, [positionId, isOpen]);
 
+  const handleRemoveProduct = async (productId: number) => {
+    if (!positionId) return;
+
+    try {
+      setRemovingProducts(prev => new Set(prev).add(productId));
+      await removeProductFromPosition(productId, positionId);
+      
+      // Refresh the details after successful removal
+      const updatedData = await getPositionDetails(positionId);
+      setDetails(updatedData);
+      
+      toast({
+        title: "Success",
+        description: "Product removed from position successfully",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : 'Failed to remove product from position',
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingProducts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
+    }
+  };
+
   const handleClose = () => {
     setDetails(null);
     setError(null);
     onClose();
   };
 
-  // Helper function to safely get the title
   const getDialogTitle = () => {
     if (details && details.position && details.position.fullLocation) {
       return `Position Details - ${details.position.fullLocation}`;
@@ -158,6 +192,7 @@ export function PositionDetailsModal({ positionId, isOpen, onClose }: PositionDe
                           <TableHead className="text-right min-w-[100px]">Price</TableHead>
                           <TableHead className="text-right min-w-[140px]">Quantity at Position</TableHead>
                           <TableHead className="text-right min-w-[160px]">Total Product Quantity</TableHead>
+                          <TableHead className="text-center min-w-[100px]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -175,6 +210,21 @@ export function PositionDetailsModal({ positionId, isOpen, onClose }: PositionDe
                             </TableCell>
                             <TableCell className="text-right">
                               <Badge variant="secondary">{product.totalProductQuantity || 0}</Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRemoveProduct(product.productId)}
+                                disabled={removingProducts.has(product.productId)}
+                                className="h-8 w-8 p-0"
+                              >
+                                {removingProducts.has(product.productId) ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}

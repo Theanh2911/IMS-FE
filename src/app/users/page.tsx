@@ -182,8 +182,8 @@ export default function Page() {
             fallback={
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Restricted</h1>
-                        <p className="text-gray-600">User management is restricted to administrators only.</p>
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+                        <p className="text-gray-600"></p>
                     </div>
                 </div>
             }

@@ -31,7 +31,6 @@ export function AdminGuard({ children, fallback }: AdminGuardProps) {
         isAdmin: isAdmin(), 
         isStaff: isStaff() 
       });
-      // Only show dialog for staff users trying to access admin-only content
       if (isStaff() && !isAdmin()) {
         console.log('AdminGuard: Staff user detected, showing unauthorized dialog');
         setShowUnauthorizedDialog(true);
@@ -41,7 +40,6 @@ export function AdminGuard({ children, fallback }: AdminGuardProps) {
 
   const handleUnauthorizedClose = () => {
     setShowUnauthorizedDialog(false);
-    // Redirect to dashboard instead of personal
     window.location.href = '/dashboard';
   };
 
@@ -57,7 +55,6 @@ export function AdminGuard({ children, fallback }: AdminGuardProps) {
     return fallback || <div>Access denied</div>;
   }
 
-  // Show unauthorized dialog for staff users trying to access admin-only content
   if (isStaff() && !isAdmin()) {
     return (
       <>
@@ -74,7 +71,7 @@ export function AdminGuard({ children, fallback }: AdminGuardProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Access Denied</AlertDialogTitle>
               <AlertDialogDescription>
-                You are not authorized to access user management. Only administrators can manage users.
+                You are not authorized to access this feature. Administrator only.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -88,11 +85,9 @@ export function AdminGuard({ children, fallback }: AdminGuardProps) {
     );
   }
 
-  // Allow access for admin users
   if (isAdmin()) {
     return <>{children}</>;
   }
 
-  // Fallback for other cases
   return fallback || <div>Access denied</div>;
 } 

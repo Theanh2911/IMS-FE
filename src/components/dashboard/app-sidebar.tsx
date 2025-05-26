@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {  IconCamera,  IconChartBar,  IconDashboard,  IconFolder,  IconInnerShadowTop,  IconListDetails,  IconListCheck,  IconUsers,  IconReceipt,} from "@tabler/icons-react"
+import {  IconCamera,  IconDashboard,  IconPackage,  IconInnerShadowTop,  IconListCheck,  IconUsers,  IconReceipt,  IconTruck,  IconMapPin,} from "@tabler/icons-react"
 
 import { NavMain } from "@/components/dashboard/nav-main"
 import { NavUser } from "@/components/dashboard/nav-user"
@@ -53,11 +53,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/users",
         icon: IconUsers,
       },
-            {        title: "Products",        url: "/products",        icon: IconFolder,      },      {        title: "Stocktaking",        url: "/stocktaking",        icon: IconListCheck,      },      {        title: "Suppliers",        url: "/suppliers",        icon: IconChartBar,      },
+      {
+        title: "Products",
+        url: "/products",
+        icon: IconPackage,
+      },
+      {
+        title: "Stocktaking",
+        url: "/stocktaking",
+        icon: IconListCheck,
+      },
+      {
+        title: "Suppliers",
+        url: "/suppliers",
+        icon: IconTruck,
+      },
       {
         title: "Positions",
         url: "/positions",
-        icon: IconChartBar,
+        icon: IconMapPin,
       },
       {
         title: "Transactions",
